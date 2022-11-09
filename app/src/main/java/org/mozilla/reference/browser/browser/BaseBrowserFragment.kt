@@ -7,6 +7,7 @@ package org.mozilla.reference.browser.browser
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -131,8 +132,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             behavior = BrowserToolbarBehavior(
                 view.context,
                 null,
-                MozacToolbarBehaviorToolbarPosition.BOTTOM
+                MozacToolbarBehaviorToolbarPosition.TOP
             )
+            gravity= Gravity.TOP
         }
         toolbarIntegration.set(
             feature = ToolbarIntegration(
@@ -288,7 +290,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 null,
                 swipeRefresh,
                 toolbar.height,
-                MozacEngineBehaviorToolbarPosition.BOTTOM
+                MozacEngineBehaviorToolbarPosition.TOP
             )
         }
         swipeRefreshFeature.set(
