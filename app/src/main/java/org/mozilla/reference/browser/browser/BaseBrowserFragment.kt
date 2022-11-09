@@ -117,6 +117,16 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
 
+        var toolbarGravity = Gravity.BOTTOM
+        var browserToolbarPosition = MozacToolbarBehaviorToolbarPosition.BOTTOM
+        var engineToolbarPosition = MozacEngineBehaviorToolbarPosition.BOTTOM
+
+        if (prefs.getBoolean(requireContext().getPreferenceKey(R.string.pref_key_toolbar_position), false)) {
+            toolbarGravity = Gravity.TOP
+            browserToolbarPosition = MozacToolbarBehaviorToolbarPosition.TOP
+            engineToolbarPosition = MozacEngineBehaviorToolbarPosition.TOP
+        }
+
         sessionFeature.set(
             feature = SessionFeature(
                 requireComponents.core.store,
@@ -132,9 +142,9 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             behavior = BrowserToolbarBehavior(
                 view.context,
                 null,
-                MozacToolbarBehaviorToolbarPosition.TOP
+                browserToolbarPosition
             )
-            gravity= Gravity.TOP
+            gravity = toolbarGravity
         }
         toolbarIntegration.set(
             feature = ToolbarIntegration(
@@ -290,7 +300,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 null,
                 swipeRefresh,
                 toolbar.height,
-                MozacEngineBehaviorToolbarPosition.TOP
+                engineToolbarPosition
             )
         }
         swipeRefreshFeature.set(

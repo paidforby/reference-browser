@@ -43,6 +43,11 @@
         android:defaultValue="false"
         android:title="@string/preferences_compose_ui"/>
 
+    <androidx.preference.SwitchPreferenceCompat
+        android:key="@string/pref_key_toolbar_position"
+        android:defaultValue="false"
+        android:title="@string/preferences_toolbar_position"/>
+
     <PreferenceCategory
         android:title="@string/developer_tools_category">
 
