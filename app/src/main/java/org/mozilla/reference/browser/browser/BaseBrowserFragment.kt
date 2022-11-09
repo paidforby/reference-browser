@@ -47,8 +47,10 @@ import org.mozilla.reference.browser.AppPermissionCodes.REQUEST_CODE_APP_PERMISS
 import org.mozilla.reference.browser.AppPermissionCodes.REQUEST_CODE_DOWNLOAD_PERMISSIONS
 import org.mozilla.reference.browser.AppPermissionCodes.REQUEST_CODE_PROMPT_PERMISSIONS
 import org.mozilla.reference.browser.BuildConfig
+import org.mozilla.reference.browser.databinding.FragmentBrowserBinding
 import org.mozilla.reference.browser.R
 import org.mozilla.reference.browser.downloads.DownloadService
+import org.mozilla.reference.browser.ext.enableDynamicBehavior
 import org.mozilla.reference.browser.ext.getPreferenceKey
 import org.mozilla.reference.browser.ext.requireComponents
 import org.mozilla.reference.browser.pip.PictureInPictureIntegration
@@ -62,6 +64,9 @@ import mozilla.components.feature.session.behavior.ToolbarPosition as MozacEngin
  */
 @Suppress("TooManyFunctions")
 abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, ActivityResultHandler {
+    private var _binding: FragmentBrowserBinding? = null
+    private val binding get() = _binding!!
+
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
     private val toolbarIntegration = ViewBoundFeatureWrapper<ToolbarIntegration>()
     private val contextMenuIntegration = ViewBoundFeatureWrapper<ContextMenuIntegration>()
@@ -76,15 +81,6 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
     private val swipeRefreshFeature = ViewBoundFeatureWrapper<SwipeRefreshFeature>()
     private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
     private val webAuthnFeature = ViewBoundFeatureWrapper<WebAuthnFeature>()
-
-    private val engineView: EngineView
-        get() = requireView().findViewById<View>(R.id.engineView) as EngineView
-    private val toolbar: BrowserToolbar
-        get() = requireView().findViewById(R.id.toolbar)
-    private val findInPageBar: FindInPageBar
-        get() = requireView().findViewById(R.id.findInPageBar)
-    private val swipeRefresh: SwipeRefreshLayout
-        get() = requireView().findViewById(R.id.swipeRefresh)
 
     private val backButtonHandler: List<ViewBoundFeatureWrapper<*>> = listOf(
         fullScreenFeature,
@@ -108,7 +104,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.fragment_browser, container, false)
+        _binding = FragmentBrowserBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     abstract val shouldUseComposeUI: Boolean
@@ -117,39 +114,21 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
 
-        var toolbarGravity = Gravity.BOTTOM
-        var browserToolbarPosition = MozacToolbarBehaviorToolbarPosition.BOTTOM
-        var engineToolbarPosition = MozacEngineBehaviorToolbarPosition.BOTTOM
-
-        if (prefs.getBoolean(requireContext().getPreferenceKey(R.string.pref_key_toolbar_position), false)) {
-            toolbarGravity = Gravity.TOP
-            browserToolbarPosition = MozacToolbarBehaviorToolbarPosition.TOP
-            engineToolbarPosition = MozacEngineBehaviorToolbarPosition.TOP
-        }
-
         sessionFeature.set(
             feature = SessionFeature(
                 requireComponents.core.store,
                 requireComponents.useCases.sessionUseCases.goBack,
-                engineView,
+                binding.engineView,
                 sessionId
             ),
             owner = this,
             view = view
         )
 
-        (toolbar.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            behavior = BrowserToolbarBehavior(
-                view.context,
-                null,
-                browserToolbarPosition
-            )
-            gravity = toolbarGravity
-        }
         toolbarIntegration.set(
             feature = ToolbarIntegration(
                 requireContext(),
-                toolbar,
+                binding.toolbar,
                 requireComponents.core.historyStorage,
                 requireComponents.core.store,
                 requireComponents.useCases.sessionUseCases,
@@ -168,7 +147,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                 requireComponents.core.store,
                 requireComponents.useCases.tabsUseCases,
                 requireComponents.useCases.contextMenuUseCases,
-                engineView,
+                binding.engineView,
                 view,
                 sessionId
             ),
@@ -259,8 +238,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             feature = FindInPageIntegration(
                 requireComponents.core.store,
                 sessionId,
-                findInPageBar as FindInPageView,
-                engineView
+                binding.findInPageBar as FindInPageView,
+                binding.engineView
             ),
             owner = this,
             view = view
@@ -294,23 +273,21 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             view = view
         )
 
-        (swipeRefresh.layoutParams as? CoordinatorLayout.LayoutParams)?.apply {
-            behavior = EngineViewBrowserToolbarBehavior(
-                context,
-                null,
-                swipeRefresh,
-                toolbar.height,
-                engineToolbarPosition
-            )
-        }
         swipeRefreshFeature.set(
             feature = SwipeRefreshFeature(
                 requireComponents.core.store,
                 requireComponents.useCases.sessionUseCases.reload,
-                swipeRefresh
+                binding.swipeRefresh
             ),
             owner = this,
             view = view
+        )
+
+        binding.toolbar.enableDynamicBehavior(
+            requireContext(),
+            binding.swipeRefresh,
+            binding.engineView,
+            prefs.getBoolean(requireContext().getPreferenceKey(R.string.pref_key_toolbar_position), false)
         )
 
         if (BuildConfig.MOZILLA_OFFICIAL) {
@@ -329,21 +306,21 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             composeView.visibility = View.VISIBLE
             composeView.setContent { BrowserToolbar() }
 
-            val params = swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams
+            val params = binding.swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams
             params.topMargin = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
-            swipeRefresh.layoutParams = params
+            binding.swipeRefresh.layoutParams = params
         }
     }
 
     private fun fullScreenChanged(enabled: Boolean) {
         if (enabled) {
             activity?.enterToImmersiveMode()
-            toolbar.visibility = View.GONE
-            engineView.setDynamicToolbarMaxHeight(0)
+            binding.toolbar.visibility = View.GONE
+            binding.engineView.setDynamicToolbarMaxHeight(0)
         } else {
             activity?.exitImmersiveMode()
-            toolbar.visibility = View.VISIBLE
-            engineView.setDynamicToolbarMaxHeight(resources.getDimensionPixelSize(R.dimen.browser_toolbar_height))
+            binding.toolbar.visibility = View.VISIBLE
+            binding.engineView.setDynamicToolbarMaxHeight(resources.getDimensionPixelSize(R.dimen.browser_toolbar_height))
         }
     }
 
