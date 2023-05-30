@@ -30,6 +30,7 @@ import org.mozilla.reference.browser.browser.BrowserFragment
 import org.mozilla.reference.browser.browser.CrashIntegration
 import org.mozilla.reference.browser.ext.components
 import org.mozilla.reference.browser.ext.isCrashReportActive
+import org.mozilla.reference.browser.home.HomeFragment
 
 /**
  * Activity that holds the [BrowserFragment].
@@ -54,6 +55,9 @@ open class BrowserActivity : AppCompatActivity() {
     open fun createBrowserFragment(sessionId: String?): Fragment =
         BrowserFragment.create(sessionId)
 
+    open fun createHomeFragment(sessionId: String?): Fragment =
+        HomeFragment.create(sessionId)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -62,7 +66,7 @@ open class BrowserActivity : AppCompatActivity() {
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction().apply {
-                replace(R.id.container, createBrowserFragment(sessionId))
+                replace(R.id.container, createHomeFragment(sessionId))
                 commit()
             }
         }

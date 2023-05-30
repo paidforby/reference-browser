@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.reference.browser.browser
+package org.mozilla.reference.browser.components.toolbar
 
 import android.content.Context
 import android.content.Intent
@@ -31,13 +31,14 @@ import mozilla.components.feature.pwa.WebAppUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
-import mozilla.components.feature.toolbar.ToolbarFeature
+//import mozilla.components.feature.toolbar.ToolbarFeature
 import mozilla.components.lib.state.ext.flow
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.reference.browser.R
 import org.mozilla.reference.browser.addons.AddonsActivity
+import org.mozilla.reference.browser.browser.FindInPageIntegration
 import org.mozilla.reference.browser.ext.components
 import org.mozilla.reference.browser.ext.share
 import org.mozilla.reference.browser.settings.SettingsActivity
@@ -53,6 +54,7 @@ class ToolbarIntegration(
     private val tabsUseCases: TabsUseCases,
     private val webAppUseCases: WebAppUseCases,
     sessionId: String? = null,
+    onTabChanged: (String?) -> Unit,
 ) : LifecycleAwareFeature, UserInteractionHandler {
     private val shippedDomainsProvider = ShippedDomainsProvider().also {
         it.initialize(context)
@@ -219,6 +221,7 @@ class ToolbarIntegration(
             )
         },
         sessionId,
+        onUrlCommitted = onTabChanged
     )
 
     override fun start() {

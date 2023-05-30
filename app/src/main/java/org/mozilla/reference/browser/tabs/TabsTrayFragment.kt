@@ -26,6 +26,7 @@ import org.mozilla.reference.browser.R
 import org.mozilla.reference.browser.browser.BrowserFragment
 import org.mozilla.reference.browser.ext.components
 import org.mozilla.reference.browser.ext.requireComponents
+import org.mozilla.reference.browser.home.HomeFragment
 
 /**
  * A fragment for displaying the tabs tray.
@@ -44,14 +45,14 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
         tabsFeature = TabsFeature(
             trayAdapter,
             requireComponents.core.store,
-            ::closeTabsTray,
+            { closeTabsTray(true) },
         ) { !it.content.private }
 
         val tabsPanel: TabsPanel = view.findViewById(R.id.tabsPanel)
         val tabsToolbar: TabsToolbar = view.findViewById(R.id.tabsToolbar)
 
         tabsPanel.initialize(tabsFeature, updateTabsToolbar = ::updateTabsToolbar)
-        tabsToolbar.initialize(tabsFeature) { closeTabsTray() }
+        tabsToolbar.initialize(tabsFeature, ::closeTabsTray )
     }
 
     override fun onStart() {
@@ -67,14 +68,22 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
     }
 
     override fun onBackPressed(): Boolean {
-        closeTabsTray()
+        closeTabsTray(false)
         return true
     }
 
-    private fun closeTabsTray() {
-        activity?.supportFragmentManager?.beginTransaction()?.apply {
-            replace(R.id.container, BrowserFragment.create())
-            commit()
+    private fun closeTabsTray(newTab : Boolean = false) {
+        if (newTab) {
+            activity?.supportFragmentManager?.beginTransaction()?.apply {
+                replace(R.id.container, HomeFragment.create())
+                commit()
+            }
+        }
+        else {
+            activity?.supportFragmentManager?.beginTransaction()?.apply {
+                replace(R.id.container, BrowserFragment.create())
+                commit()
+            }
         }
     }
 
@@ -100,7 +109,7 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
             delegate = object : TabsTray.Delegate {
                 override fun onTabSelected(tab: TabSessionState, source: String?) {
                     requireComponents.useCases.tabsUseCases.selectTab(tab.id)
-                    closeTabsTray()
+                    closeTabsTray(false)
                 }
 
                 override fun onTabClosed(tab: TabSessionState, source: String?) {

@@ -16,13 +16,13 @@ class TabsToolbar @JvmOverloads constructor(
 ) : androidx.appcompat.widget.Toolbar(context, attrs) {
     private var tabsFeature: TabsFeature? = null
     private var isPrivateTray = false
-    private var closeTabsTray: (() -> Unit)? = null
+    private var closeTabsTray: ((Boolean) -> Unit)? = null
 
     init {
         navigationContentDescription = "back"
         setNavigationIcon(R.drawable.mozac_ic_back)
         setNavigationOnClickListener {
-            closeTabsTray?.invoke()
+            closeTabsTray?.invoke(false)
         }
         inflateMenu(R.menu.tabstray_menu)
         setOnMenuItemClickListener {
@@ -31,9 +31,9 @@ class TabsToolbar @JvmOverloads constructor(
                 R.id.newTab -> {
                     when (isPrivateTray) {
                         true -> tabsUseCases.addTab.invoke("about:privatebrowsing", selectTab = true, private = true)
-                        false -> tabsUseCases.addTab.invoke("about:blank", selectTab = true)
+                        false -> tabsUseCases.selectTab("")
                     }
-                    closeTabsTray?.invoke()
+                    closeTabsTray?.invoke(true)
                 }
                 R.id.closeTab -> {
                     when (isPrivateTray) {
@@ -46,7 +46,7 @@ class TabsToolbar @JvmOverloads constructor(
         }
     }
 
-    fun initialize(tabsFeature: TabsFeature?, closeTabsTray: () -> Unit) {
+    fun initialize(tabsFeature: TabsFeature?, closeTabsTray: (Boolean) -> Unit) {
         this.tabsFeature = tabsFeature
         this.closeTabsTray = closeTabsTray
     }
