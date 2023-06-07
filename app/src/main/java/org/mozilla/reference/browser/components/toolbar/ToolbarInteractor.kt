@@ -14,9 +14,8 @@ import mozilla.components.support.ktx.kotlin.toNormalizedUrl
  */
 class ToolbarInteractor(
     private val toolbar: Toolbar,
-    private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
+    private val loadUrlUseCase: LoadUrlUseCase,
     private val searchUseCase: SearchUseCase? = null,
-    private val onUrlCommitted: ((String?) -> Unit)? = null,
 ) {
 
     /**
@@ -31,7 +30,6 @@ class ToolbarInteractor(
                 searchUseCase != null -> searchUseCase.invoke(text)
                 else -> loadUrlUseCase.invoke(text)
             }
-            onUrlCommitted?.invoke(text)
             true
         }
     }

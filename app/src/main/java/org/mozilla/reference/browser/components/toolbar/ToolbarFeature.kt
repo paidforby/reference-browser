@@ -20,6 +20,7 @@ import mozilla.components.support.base.feature.UserInteractionHandler
  * A function representing the search use case, accepting
  * the search terms as string.
  */
+typealias LoadUrlUseCase = (String) -> Unit
 typealias SearchUseCase = (String) -> Unit
 
 /**
@@ -29,12 +30,11 @@ typealias SearchUseCase = (String) -> Unit
 class ToolbarFeature(
     private val toolbar: Toolbar,
     store: BrowserStore,
-    loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
+    loadUrlUseCase: LoadUrlUseCase,
     searchUseCase: SearchUseCase? = null,
     customTabId: String? = null,
     shouldDisplaySearchTerms: Boolean = false,
     urlRenderConfiguration: ToolbarFeature.UrlRenderConfiguration? = null,
-    onUrlCommitted: ((String?) -> Unit)? = null,
 ) : LifecycleAwareFeature, UserInteractionHandler {
     @VisibleForTesting
     internal var presenter = ToolbarPresenter(
@@ -46,7 +46,7 @@ class ToolbarFeature(
     )
 
     @VisibleForTesting
-    internal var interactor = ToolbarInteractor(toolbar, loadUrlUseCase, searchUseCase, onUrlCommitted)
+    internal var interactor = ToolbarInteractor(toolbar, loadUrlUseCase, searchUseCase)
 
     @VisibleForTesting
     internal var controller = ToolbarBehaviorController(toolbar, store, customTabId)

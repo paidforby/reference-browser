@@ -54,7 +54,7 @@ class ToolbarIntegration(
     private val tabsUseCases: TabsUseCases,
     private val webAppUseCases: WebAppUseCases,
     sessionId: String? = null,
-    onTabChanged: (String?) -> Unit,
+    onUrlCommitted: (String?) -> Unit,
 ) : LifecycleAwareFeature, UserInteractionHandler {
     private val shippedDomainsProvider = ShippedDomainsProvider().also {
         it.initialize(context)
@@ -212,16 +212,24 @@ class ToolbarIntegration(
     private val toolbarFeature: ToolbarFeature = ToolbarFeature(
         toolbar,
         context.components.core.store,
-        context.components.useCases.sessionUseCases.loadUrl,
+        { url ->
+            if (context.components.core.store.state.selectedTab == null) {
+                context.components.useCases.tabsUseCases.addTab(url, selectTab = true)
+            }
+            else {
+                context.components.useCases.sessionUseCases.loadUrl.invoke(url)
+            }
+            onUrlCommitted.invoke(url)
+        },
         { searchTerms ->
             context.components.useCases.searchUseCases.defaultSearch.invoke(
                 searchTerms = searchTerms,
                 searchEngine = null,
                 parentSessionId = null,
             )
+            onUrlCommitted.invoke(searchTerms)
         },
         sessionId,
-        onUrlCommitted = onTabChanged
     )
 
     override fun start() {
